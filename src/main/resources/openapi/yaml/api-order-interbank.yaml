@@ -1,0 +1,193 @@
+---
+openapi: 3.1.0
+info:
+  version: '1'
+  title: API BS Order Interbank
+  description: API diseñada para el reto Técnico con Interbank.
+servers:
+  - url: http://localhost:8080
+    description: SwaggerHub API Auto Mocking.
+tags:
+  - name: order
+    description: Todo sobre los Pedidos del Sistema.
+paths:
+  /orders:
+    post:
+      tags:
+        - order
+      summary: Create a Order
+      description: Add a new Order.
+      operationId: registerOrder
+      requestBody:
+        description: Create a new Order in the System.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderSend'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/OrderSend'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderSend'
+        required: true
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderItem'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/OrderItem'
+        "400":
+          description: Solicitud inválida.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        "404":
+          description: Recurso no encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        "409":
+          description: Conflicto de negocio (stock insuficiente).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        "500":
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+components:
+  schemas:
+    OrderRequest:
+      type: object
+      properties:
+        listOrder:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ProductItem'
+    OrderSend:
+      type: object
+      properties:
+        date:
+          type: string
+          description: Fecha realizada del Pedido.
+          pattern: '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
+          example: "2025-12-26"
+        products:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ProductSend'
+    ProductSend:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nombre del Producto.
+          maxLength: 50
+          pattern: '^[A-Za-z]+$'
+          example: "Inka Kola"
+        price:
+          type: number
+          description: Precio del Producto.
+          format: double
+          example: 2.50
+        lot:
+          type: integer
+          description: Cantidad del Producto.
+          format: int64
+          example: 1
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID del Pedido.
+          format: int64
+          example: 1
+        date:
+          type: string
+          description: Fecha realizada del Pedido.
+          pattern: '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
+          example: "2025-12-26"
+        total:
+          type: number
+          description: Total del Pedido.
+          format: double
+          example: 1020.50
+        state:
+          type: string
+          description: Estado del Pedido.
+          enum:
+            - CREATED
+            - CONFIRMED
+            - CANCELLED
+          example: CONFIRMED
+    ProductItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID del Producto.
+          format: int64
+          example: 1
+        name:
+          type: string
+          description: Nombre del Producto.
+          maxLength: 50
+          pattern: '^[A-Za-z]+$'
+          example: "Inka Kola"
+        price:
+          type: number
+          description: Precio del Producto.
+          format: double
+          example: 2.50
+        stock:
+          type: integer
+          description: Stock del Producto.
+          format: int64
+          example: 6
+    ApiError:
+      type: object
+      required:
+        - status
+        - error
+        - message
+        - path
+      properties:
+        status:
+          type: integer
+          example: 409
+
+        error:
+          type: string
+          example: "Conflict"
+
+        message:
+          type: string
+          example: "Stock insuficiente para el producto"
+
+        path:
+          type: string
+          example: "/orders"
+
+        requestId:
+          type: string
+          example: "abc123"

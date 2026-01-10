@@ -1,0 +1,8 @@
+spring:
+  banner:
+    location: classpath:banner/bannerInterbank.txt
+  application:
+    name: API-BS-INTERBANK
+
+server:
+  port: 8081
