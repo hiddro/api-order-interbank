@@ -80,4 +80,19 @@ public class ProductServiceImpl extends CrudServiceImpl<Product, Long> implement
                 .doOnSuccess(r -> log.info("Producto registrado: {}", r))
                 .doOnError(e -> log.error("Error registrando producto", e));
     }
+
+    @Override
+    public Mono<Void> deleteProduct(String name) {
+        return productRepositories.findByName(name)
+                .switchIfEmpty(
+                        Mono.error(
+                                new ResponseStatusException(
+                                        HttpStatus.BAD_REQUEST,
+                                        "El producto no existe"
+                                ))
+                )
+                .flatMap(productRepositories::delete)
+                .doOnSuccess(v -> log.info("Delete completado"))
+                .doOnError(e -> log.error("Error en delete", e));
+    }
 }

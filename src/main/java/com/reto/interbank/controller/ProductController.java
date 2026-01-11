@@ -5,6 +5,7 @@ import com.reto.reto.interbank.api.v1.ProductApi;
 import com.reto.reto.interbank.dto.ProductRequest;
 import com.reto.reto.interbank.dto.ProductResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,7 +40,7 @@ public class ProductController implements ProductApi {
     @Override
     public Mono<ResponseEntity<ProductResponse>> registerProduct(Mono<ProductRequest> productRequest, ServerWebExchange exchange) {
         return productRequest.flatMap(p -> productService.registerProduct(p))
-                .map(e -> ResponseEntity.ok()
+                .map(e -> ResponseEntity.status(HttpStatus.CREATED)
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(e)
                 );
@@ -52,5 +53,11 @@ public class ProductController implements ProductApi {
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(e)
                 );
+    }
+
+    @Override
+    public Mono<ResponseEntity<Void>> deleteProduct(String name, ServerWebExchange exchange) {
+        return productService.deleteProduct(name)
+                .then(Mono.just(ResponseEntity.noContent().build()));
     }
 }

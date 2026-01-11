@@ -48,31 +48,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiError'
+                $ref: '#/components/schemas/ApiException'
         "401":
           description: No autorizado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiError'
+                $ref: '#/components/schemas/ApiException'
         "404":
           description: Recurso no encontrado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiError'
+                $ref: '#/components/schemas/ApiException'
         "409":
           description: Conflicto de negocio (stock insuficiente)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiError'
+                $ref: '#/components/schemas/ApiException'
         "500":
           description: Error interno del servidor
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiError'
+                $ref: '#/components/schemas/ApiException'
   /products:
     get:
       tags:
@@ -94,12 +94,30 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ProductResponse'
-        default:
-          description: unexpected error
+        "400":
+          description: Solicitud inválida
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiError'
+                $ref: '#/components/schemas/ApiException'
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "404":
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
     post:
       tags:
         - product
@@ -120,7 +138,7 @@ paths:
               $ref: '#/components/schemas/ProductRequest'
         required: true
       responses:
-        "200":
+        "201":
           description: Successful operation
           content:
             application/json:
@@ -129,12 +147,36 @@ paths:
             application/xml:
               schema:
                 $ref: '#/components/schemas/ProductResponse'
-        default:
-          description: unexpected error
+        "400":
+          description: Solicitud inválida
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiError'
+                $ref: '#/components/schemas/ApiException'
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "404":
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "409":
+          description: Conflicto de negocio (stock insuficiente)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
   /products/{name}:
     get:
       tags:
@@ -159,12 +201,30 @@ paths:
             application/xml:
               schema:
                 $ref: '#/components/schemas/ProductResponse'
-        default:
-          description: unexpected error
+        "400":
+          description: Solicitud inválida
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiError'
+                $ref: '#/components/schemas/ApiException'
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "404":
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
     put:
       tags:
         - product
@@ -201,12 +261,36 @@ paths:
             application/xml:
               schema:
                 $ref: '#/components/schemas/ProductResponse'
-        default:
-          description: unexpected error
+        "400":
+          description: Solicitud inválida
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiError'
+                $ref: '#/components/schemas/ApiException'
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "404":
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "409":
+          description: Conflicto de negocio (stock insuficiente)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
     delete:
       tags:
         - product
@@ -223,14 +307,36 @@ paths:
       responses:
         '200':
           description: successful operation
-        '400':
-          description: Invalid pet value
-        default:
-          description: Unexpected error
+        "400":
+          description: Solicitud inválida
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApiError"
+                $ref: '#/components/schemas/ApiException'
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "404":
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "409":
+          description: Conflicto de negocio (stock insuficiente)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
 components:
   schemas:
     ProductResponse:
@@ -366,36 +472,49 @@ components:
           description: Stock del Producto.
           format: int64
           examples: [6]
-    ApiError:
+    ApiException:
+      title: ApiException
       type: object
       required:
-        - status
-        - error
-        - message
-        - path
-        - timestamp
+        - code
+        - description
       properties:
-        status:
-          type: integer
-          examples: [409]
-
-        error:
+        code:
           type: string
-          examples: ["Conflict"]
-
-        message:
+          description: Codigo de error de Sistema.
+          examples: [XXX]
+        description:
           type: string
-          examples: ["Stock insuficiente para el producto"]
-
-        path:
+          description: Descripción del error de Sistema.
+          examples: [Error al llamar al servicio]
+        errorType:
           type: string
-          examples: ["/orders"]
-
-        timestamp:
+          description: Tipo de Error de Sistema.
+          examples: [TECHNICAL]
+        exceptionDetails:
+          type: array
+          description: Lista de detalles del error.
+          items:
+            $ref: '#/components/schemas/ApiExceptionDetail'
+        properties:
+          type: object
+          properties: {}
+          description: Lista de propiedades especiales.
+      description: Datos de error del Sistema.
+    ApiExceptionDetail:
+      title: ApiExceptionDetail
+      type: object
+      properties:
+        code:
           type: string
-          format: date-time
-          examples: ["2026-01-09T19:30:00Z"]
-
-        requestId:
+          description: Codigo de error del Detalle.
+          examples: [MXXXX01]
+        component:
           type: string
-          examples: ["abc123"]
+          description: Nombre del componente de falla.
+          examples: [api-ms-order]
+        description:
+          type: string
+          description: Descripción del Detalle.
+          examples: [Codigo invalido]
+      description: Datos del error técnico.
