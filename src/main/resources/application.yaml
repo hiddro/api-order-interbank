@@ -3,6 +3,20 @@ spring:
     location: classpath:banner/bannerInterbank.txt
   application:
     name: API-BS-INTERBANK
+  r2dbc:
+    url: r2dbc:h2:mem:///orderdb;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+  h2:
+    console:
+      enabled: true
 
 server:
   port: 8081
+
+logging:
+  level:
+    org.springframework.r2dbc: DEBUG

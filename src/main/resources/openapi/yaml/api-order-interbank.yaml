@@ -3,23 +3,25 @@ openapi: 3.1.0
 info:
   version: '1'
   title: API BS Order Interbank
-  description: API diseñada para el reto Técnico con Interbank.
+  description: API diseñada para el reto Técnico con Interbank
 servers:
-  - url: http://localhost:8080
-    description: SwaggerHub API Auto Mocking.
+  - url: /http://localhost:8080/
+    description: SwaggerHub API Auto Mocking
 tags:
   - name: order
-    description: Todo sobre los Pedidos del Sistema.
+    description: Todo sobre los Pedidos del Sistema
+  - name: product
+    description: Todo sobre los Productos del Sistema.
 paths:
   /orders:
     post:
       tags:
         - order
       summary: Create a Order
-      description: Add a new Order.
+      description: Add a new Order
       operationId: registerOrder
       requestBody:
-        description: Create a new Order in the System.
+        description: Create a new Order in the System INTERBANK
         content:
           application/json:
             schema:
@@ -33,7 +35,7 @@ paths:
         required: true
       responses:
         "200":
-          description: Successful operation.
+          description: Successful operation
           content:
             application/json:
               schema:
@@ -42,7 +44,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/OrderItem'
         "400":
-          description: Solicitud inválida.
+          description: Solicitud inválida
           content:
             application/json:
               schema:
@@ -54,26 +56,226 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiError'
         "404":
-          description: Recurso no encontrado.
+          description: Recurso no encontrado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
         "409":
-          description: Conflicto de negocio (stock insuficiente).
+          description: Conflicto de negocio (stock insuficiente)
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
         "500":
-          description: Error interno del servidor.
+          description: Error interno del servidor
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
-
+  /products:
+    get:
+      tags:
+        - product
+      summary: List Products.
+      description: Return list products
+      operationId: getProducts
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductResponse'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductResponse'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+    post:
+      tags:
+        - product
+      summary: Create a Product
+      description: Add a new Product
+      operationId: registerProduct
+      requestBody:
+        description: Create a new product in the System
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /products/{name}:
+    get:
+      tags:
+        - product
+      summary: Find by product for Name
+      description: Return product for Name of database
+      operationId: getProductByName
+      parameters:
+        - name: name
+          in: path
+          description: name product of database
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+    put:
+      tags:
+        - product
+      summary: Update product
+      description: Update product in the System.
+      operationId: updateProduct
+      parameters:
+        - name: name
+          in: path
+          description: name product of database
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Update an existent product in the system.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductRequest'
+        required: true
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+    delete:
+      tags:
+        - product
+      summary: Delete a product.
+      description: delete a product.
+      operationId: deleteProduct
+      parameters:
+        - name: name
+          in: path
+          description: Product name to delete
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+        '400':
+          description: Invalid pet value
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 components:
   schemas:
+    ProductResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID del Producto.
+          format: int64
+          examples: [1]
+        name:
+          type: string
+          description: Nombre del Producto.
+          maxLength: 50
+          pattern: '^[A-Za-z]+$'
+          examples: ["Inka Kola"]
+        price:
+          type: number
+          description: Precio del Producto.
+          format: double
+          examples: [2.50]
+        stock:
+          type: integer
+          description: Stock del Producto.
+          format: int64
+          examples: [6]
+    ProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Nombre del Producto.
+          maxLength: 50
+          pattern: '^[A-Za-z]+$'
+          examples: ["Inka Kola"]
+        price:
+          type: number
+          description: Precio del Producto.
+          format: double
+          examples: [2.50]
+        stock:
+          type: integer
+          description: Stock del Producto.
+          format: int64
+          examples: [6]
     OrderRequest:
       type: object
       properties:
@@ -89,7 +291,7 @@ components:
           type: string
           description: Fecha realizada del Pedido.
           pattern: '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
-          example: "2025-12-26"
+          examples: ["2025-12-26"]
         products:
           type: array
           minItems: 1
@@ -103,17 +305,17 @@ components:
           description: Nombre del Producto.
           maxLength: 50
           pattern: '^[A-Za-z]+$'
-          example: "Inka Kola"
+          examples: ["Inka Kola"]
         price:
           type: number
           description: Precio del Producto.
           format: double
-          example: 2.50
+          examples: [2.50]
         lot:
           type: integer
           description: Cantidad del Producto.
           format: int64
-          example: 1
+          examples: [1]
     OrderItem:
       type: object
       properties:
@@ -121,17 +323,17 @@ components:
           type: integer
           description: ID del Pedido.
           format: int64
-          example: 1
+          examples: [1]
         date:
           type: string
           description: Fecha realizada del Pedido.
           pattern: '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
-          example: "2025-12-26"
+          examples: ["2025-12-26"]
         total:
           type: number
           description: Total del Pedido.
           format: double
-          example: 1020.50
+          examples: [1020.50]
         state:
           type: string
           description: Estado del Pedido.
@@ -139,7 +341,7 @@ components:
             - CREATED
             - CONFIRMED
             - CANCELLED
-          example: CONFIRMED
+          examples: [CONFIRMED]
     ProductItem:
       type: object
       properties:
@@ -147,23 +349,23 @@ components:
           type: integer
           description: ID del Producto.
           format: int64
-          example: 1
+          examples: [1]
         name:
           type: string
           description: Nombre del Producto.
           maxLength: 50
           pattern: '^[A-Za-z]+$'
-          example: "Inka Kola"
+          examples: ["Inka Kola"]
         price:
           type: number
           description: Precio del Producto.
           format: double
-          example: 2.50
+          examples: [2.50]
         stock:
           type: integer
           description: Stock del Producto.
           format: int64
-          example: 6
+          examples: [6]
     ApiError:
       type: object
       required:
@@ -171,23 +373,29 @@ components:
         - error
         - message
         - path
+        - timestamp
       properties:
         status:
           type: integer
-          example: 409
+          examples: [409]
 
         error:
           type: string
-          example: "Conflict"
+          examples: ["Conflict"]
 
         message:
           type: string
-          example: "Stock insuficiente para el producto"
+          examples: ["Stock insuficiente para el producto"]
 
         path:
           type: string
-          example: "/orders"
+          examples: ["/orders"]
+
+        timestamp:
+          type: string
+          format: date-time
+          examples: ["2026-01-09T19:30:00Z"]
 
         requestId:
           type: string
-          example: "abc123"
+          examples: ["abc123"]
