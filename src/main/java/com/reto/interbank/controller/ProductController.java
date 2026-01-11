@@ -47,8 +47,8 @@ public class ProductController implements ProductApi {
     }
 
     @Override
-    public Mono<ResponseEntity<ProductResponse>> updateProduct(String name, Mono<ProductRequest> productRequest, ServerWebExchange exchange) {
-        return productRequest.flatMap(p -> productService.updateProduct(name, p))
+    public Mono<ResponseEntity<ProductResponse>> updateProduct(String name, String operation, Mono<ProductRequest> productRequest, ServerWebExchange exchange) {
+        return productRequest.flatMap(p -> productService.updateProduct(name, operation, p))
                 .map(e -> ResponseEntity.ok()
                         .contentType(MediaType.APPLICATION_JSON)
                         .body(e)

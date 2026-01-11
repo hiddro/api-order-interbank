@@ -14,7 +14,7 @@ public interface ProductService extends CrudService<Product, Long>{
 
     Mono<Flux<ProductResponse>> listProduct();
 
-    Mono<ProductResponse> updateProduct(String name, ProductRequest productRequest);
+    Mono<ProductResponse> updateProduct(String name, String operation, ProductRequest productRequest);
 
     Mono<Void> deleteProduct(String name);
 }

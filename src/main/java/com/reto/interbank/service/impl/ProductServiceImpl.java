@@ -9,11 +9,13 @@ import com.reto.reto.interbank.dto.ProductRequest;
 import com.reto.reto.interbank.dto.ProductResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 @Service
 @Slf4j
@@ -60,23 +62,51 @@ public class ProductServiceImpl extends CrudServiceImpl<Product, Long> implement
     }
 
     @Override
-    public Mono<ProductResponse> updateProduct(String name, ProductRequest productRequest) {
+    public Mono<ProductResponse> updateProduct(String name, String operation, ProductRequest productRequest) {
         return productRepositories.findByName(name)
-                .flatMap(p -> productRepositories
-                                .save(Product.builder()
-                                        .id(p.getId())
-                                        .name(productRequest.getName())
-                                        .price(productRequest.getPrice())
-                                        .stock(productRequest.getStock())
-                                        .build()))
-                .map(productBuilder::buildOfProduct)
                 .switchIfEmpty(
-                        Mono.<ProductResponse>error(
-                                        new ResponseStatusException(
-                                                HttpStatus.BAD_REQUEST,
-                                                "El producto no existe"
-                                        )
-                ))
+                        Mono.error(
+                                new ResponseStatusException(
+                                        HttpStatus.BAD_REQUEST,
+                                        "El producto no existe"
+                                )
+                        ))
+                .flatMap(p -> {
+                    if(p.getStock() < productRequest.getStock() && operation.equalsIgnoreCase("DECREASE")){
+                        return Mono.error(
+                                new ResponseStatusException(
+                                        HttpStatus.BAD_REQUEST,
+                                        "Stock insuficiente"
+                                )
+                        );
+                    }
+
+                    p.setName(productRequest.getName());
+                    p.setPrice(productRequest.getPrice());
+                    p.setStock(operation.equalsIgnoreCase("DECREASE") ?
+                            p.getStock() - productRequest.getStock() :
+                            p.getStock() + productRequest.getStock());
+
+                    return productRepositories
+                            .save(p);
+                })
+                .map(productBuilder::buildOfProduct)
+                .retryWhen(
+                        Retry
+                                .max(3) // hasta 3 reintentos
+                                .filter(ex -> ex instanceof OptimisticLockingFailureException)
+                                .doBeforeRetry(rs ->
+                                        log.warn("Conflicto de concurrencia, reintentando... intento {}",
+                                                rs.totalRetries() + 1)
+                                )
+                )
+                .onErrorMap(
+                        OptimisticLockingFailureException.class,
+                        e -> new ResponseStatusException(
+                                HttpStatus.CONFLICT,
+                                "El producto fue modificado por otro proceso, intente nuevamente"
+                        )
+                )
                 .doOnSuccess(r -> log.info("Producto registrado: {}", r))
                 .doOnError(e -> log.error("Error registrando producto", e));
     }

@@ -2,6 +2,7 @@ package com.reto.interbank.models.entities;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.relational.core.mapping.Table;
 
 @AllArgsConstructor
@@ -16,4 +17,6 @@ public class Product {
     private String name;
     private Double price;
     private Long stock;
+    @Version
+    private Long version;
 }
