@@ -7,6 +7,7 @@ import com.reto.interbank.repository.GenericRepo;
 import com.reto.interbank.repository.OrderRepositories;
 import com.reto.interbank.repository.ProductRepositories;
 import com.reto.interbank.service.OrderService;
+import com.reto.interbank.utils.Validator;
 import com.reto.reto.interbank.dto.OrderRequest;
 import com.reto.reto.interbank.dto.OrderResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +40,8 @@ public class OrderServiceImpl extends CrudServiceImpl<Order, Long> implements Or
 
     @Override
     public Mono<OrderResponse> getById(String id) {
-        return null;
+        return orderRepositories.findById(Long.valueOf(id))
+                .map(orderBuilder::buildOfOrder);
     }
 
     @Override
@@ -101,6 +103,91 @@ public class OrderServiceImpl extends CrudServiceImpl<Order, Long> implements Or
     @Override
     public Mono<Flux<OrderResponse>> listOrder() {
         return Mono.just(orderRepositories.findAll().map(orderBuilder::buildOfOrder));
+    }
+
+    @Override
+    public Mono<OrderResponse> updateOrder(String id, OrderRequest orderRequest) {
+        return orderRepositories.findById(Long.valueOf(id))
+                .switchIfEmpty(
+                        Mono.error(
+                            new ResponseStatusException(
+                                    HttpStatus.BAD_REQUEST,
+                                    "El order no existe"
+                            )
+                        ))
+                .flatMap(l -> Flux.fromIterable(orderRequest.getProductKeywords().getKeywords())
+                        .flatMap(k ->
+                                productRepositories.findByName(k.getKeywordProduct())
+                                        .switchIfEmpty(
+                                                Mono.error(
+                                                        new ResponseStatusException(
+                                                                HttpStatus.BAD_REQUEST,
+                                                                "El producto no existe: " + k.getKeywordProduct()
+                                                        )
+                                                )
+
+                                        )
+                                        .flatMap(p -> {
+                                            if(p.getStock() < k.getKeywordLot()){
+                                                return Mono.error(
+                                                        new ResponseStatusException(
+                                                                HttpStatus.BAD_REQUEST,
+                                                                "Stock insuficiente"
+                                                        )
+                                                );
+                                            }
+
+                                            p.setStock(p.getStock() - k.getKeywordLot());
+
+                                            return productRepositories.save(p)
+                                                    .retryWhen(
+                                                            Retry.max(3)
+                                                                    .filter(ex -> ex instanceof OptimisticLockingFailureException)
+                                                                    .doBeforeRetry(rs ->
+                                                                            log.warn(
+                                                                                    "Conflicto de concurrencia en producto {}, reintentando... intento {}",
+                                                                                    k.getKeywordProduct(),
+                                                                                    rs.totalRetries() + 1
+                                                                            )
+                                                                    )
+                                                    )
+                                                    .flatMap(s -> Mono.just(ProductDto.builder()
+                                                            .name(k.getKeywordProduct())
+                                                            .lot(k.getKeywordLot().longValue())
+                                                            .amount(s.getPrice() * k.getKeywordLot())
+                                                            .build()));
+
+
+                                        })
+
+                        )
+                        .map(ProductDto::getAmount)
+                        .reduce(0.0, Double::sum)
+                        .flatMap(total -> {
+                            l.setFecha(orderRequest.getDate());
+                            l.setEstado(orderRequest.getState().getValue());
+                            l.setTotal(Validator.validatePrice(orderRequest, total));
+                            return orderRepositories
+                                .save(l);
+                        })
+                        .map(orderBuilder::buildOfOrder)
+                        .doOnSuccess(r -> log.info("Orden registrada: {}", r))
+                        .doOnError(e -> log.error("Error registrando orden", e)));
+    }
+
+    @Override
+    public Mono<Void> deleteOrder(String id) {
+        return orderRepositories.findById(Long.valueOf(id))
+                .switchIfEmpty(
+                        Mono.error(
+                                new ResponseStatusException(
+                                        HttpStatus.BAD_REQUEST,
+                                        "El producto no existe"
+                                ))
+                )
+                .flatMap(orderRepositories::delete)
+                .doOnSuccess(v -> log.info("Delete completado"))
+                .doOnError(e -> log.error("Error en delete", e));
     }
 
 }

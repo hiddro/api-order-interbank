@@ -36,4 +36,28 @@ public class OrderController implements OrderApi {
                         .body(e)
                 );
     }
+
+    @Override
+    public Mono<ResponseEntity<OrderResponse>> getOrderById(String orderId, ServerWebExchange exchange) {
+        return orderService.getById(orderId)
+                .map(e -> ResponseEntity.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(e)
+                );
+    }
+
+    @Override
+    public Mono<ResponseEntity<OrderResponse>> updateOrder(String orderId, Mono<OrderRequest> orderRequest, ServerWebExchange exchange) {
+        return orderRequest.flatMap(o -> orderService.updateOrder(orderId, o))
+                .map(e -> ResponseEntity.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(e)
+                );
+    }
+
+    @Override
+    public Mono<ResponseEntity<Void>> deleteOrder(String orderId, ServerWebExchange exchange) {
+        return orderService.deleteOrder(orderId)
+                .then(Mono.just(ResponseEntity.noContent().build()));
+    }
 }

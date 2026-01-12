@@ -13,4 +13,8 @@ public interface OrderService extends CrudService<Order, Long> {
     Mono<OrderResponse> registerOrder(OrderRequest orderRequest);
 
     Mono<Flux<OrderResponse>> listOrder();
+
+    Mono<OrderResponse> updateOrder(String id, OrderRequest orderRequest);
+
+    Mono<Void> deleteOrder(String id);
 }

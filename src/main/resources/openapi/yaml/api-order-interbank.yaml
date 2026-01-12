@@ -123,7 +123,7 @@ paths:
         - order
       summary: Find by Order for Name
       description: Return Order for Name of database
-      operationId: getOrderByName
+      operationId: getOrderById
       parameters:
         - name: orderId
           in: path

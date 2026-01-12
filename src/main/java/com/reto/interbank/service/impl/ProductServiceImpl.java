@@ -125,4 +125,5 @@ public class ProductServiceImpl extends CrudServiceImpl<Product, Long> implement
                 .doOnSuccess(v -> log.info("Delete completado"))
                 .doOnError(e -> log.error("Error en delete", e));
     }
+
 }
