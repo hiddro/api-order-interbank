@@ -9,14 +9,15 @@ import com.reto.interbank.repository.ProductRepositories;
 import com.reto.interbank.service.OrderService;
 import com.reto.reto.interbank.dto.OrderRequest;
 import com.reto.reto.interbank.dto.OrderResponse;
-import com.reto.reto.interbank.dto.RegisterProductKeywords;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 @Service
 @Slf4j
@@ -68,6 +69,17 @@ public class OrderServiceImpl extends CrudServiceImpl<Order, Long> implements Or
                                     p.setStock(p.getStock() - k.getKeywordLot());
 
                                     return productRepositories.save(p)
+                                            .retryWhen(
+                                                    Retry.max(3)
+                                                            .filter(ex -> ex instanceof OptimisticLockingFailureException)
+                                                            .doBeforeRetry(rs ->
+                                                                    log.warn(
+                                                                            "Conflicto de concurrencia en producto {}, reintentando... intento {}",
+                                                                            k.getKeywordProduct(),
+                                                                            rs.totalRetries() + 1
+                                                                    )
+                                                            )
+                                            )
                                             .flatMap(s -> Mono.just(ProductDto.builder()
                                                     .name(k.getKeywordProduct())
                                                     .lot(k.getKeywordLot().longValue())

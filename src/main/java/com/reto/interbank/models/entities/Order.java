@@ -17,7 +17,6 @@ public class Order {
     private String fecha;
     private Double total;
     private String estado;
-    //private String productsJson;
     @Version
     private Long version;
 }
