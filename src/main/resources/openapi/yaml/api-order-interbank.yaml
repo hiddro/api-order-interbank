@@ -1,3 +1,4 @@
+---
 openapi: 3.1.0
 info:
   version: '1'
@@ -13,6 +14,50 @@ tags:
     description: Todo sobre los Productos del Sistema.
 paths:
   /orders:
+    get:
+      tags:
+        - order
+      summary: List Orders.
+      description: Return list orders.
+      operationId: getOrder
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderResponse'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderResponse'
+        "400":
+          description: Solicitud inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "404":
+          description: Recurso no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
     post:
       tags:
         - order
@@ -24,13 +69,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OrderSend'
+              $ref: '#/components/schemas/OrderRequest'
           application/xml:
             schema:
-              $ref: '#/components/schemas/OrderSend'
+              $ref: '#/components/schemas/OrderRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/OrderSend'
+              $ref: '#/components/schemas/OrderRequest'
         required: true
       responses:
         "200":
@@ -38,10 +83,10 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrderItem'
+                $ref: '#/components/schemas/OrderResponse'
             application/xml:
               schema:
-                $ref: '#/components/schemas/OrderItem'
+                $ref: '#/components/schemas/OrderResponse'
         "400":
           description: Solicitud inválida
           content:
@@ -62,6 +107,54 @@ paths:
                 $ref: '#/components/schemas/ApiException'
         "409":
           description: Conflicto de negocio (stock insuficiente)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+  /orders/{orderId}:
+    get:
+      tags:
+        - order
+      summary: Find by Order for Name
+      description: Return Order for Name of database
+      operationId: getOrderByName
+      parameters:
+        - name: orderId
+          in: path
+          description: ID of order to return
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        "400":
+          description: Solicitud inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiException'
+        "404":
+          description: Recurso no encontrado
           content:
             application/json:
               schema:
@@ -313,8 +406,8 @@ paths:
           schema:
             type: string
       responses:
-        '200':
-          description: successful operation
+        '204':
+          description: Product deleted successfully
         "400":
           description: Solicitud inválida
           content:
@@ -329,12 +422,6 @@ paths:
                 $ref: '#/components/schemas/ApiException'
         "404":
           description: Recurso no encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiException'
-        "409":
-          description: Conflicto de negocio (stock insuficiente)
           content:
             application/json:
               schema:
@@ -393,44 +480,22 @@ components:
     OrderRequest:
       type: object
       properties:
-        listOrder:
-          type: array
-          minItems: 1
-          items:
-            $ref: '#/components/schemas/ProductItem'
-    OrderSend:
-      type: object
-      properties:
         date:
           type: string
           description: Fecha realizada del Pedido.
           pattern: '^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
           examples: ["2025-12-26"]
-        products:
-          type: array
-          minItems: 1
-          items:
-            $ref: '#/components/schemas/ProductSend'
-    ProductSend:
-      type: object
-      properties:
-        name:
+        state:
           type: string
-          description: Nombre del Producto.
-          maxLength: 50
-          pattern: '^[A-Za-z]+$'
-          examples: ["Inka Kola"]
-        price:
-          type: number
-          description: Precio del Producto.
-          format: double
-          examples: [2.50]
-        lot:
-          type: integer
-          description: Cantidad del Producto.
-          format: int64
-          examples: [1]
-    OrderItem:
+          description: Estado del Pedido.
+          enum:
+            - CREATED
+            - CONFIRMED
+            - CANCELLED
+          examples: [CREATED]
+        productKeywords:
+          $ref: '#/components/schemas/RegisterProductKeywords'
+    OrderResponse:
       type: object
       properties:
         id:
@@ -456,30 +521,40 @@ components:
             - CONFIRMED
             - CANCELLED
           examples: [CONFIRMED]
-    ProductItem:
+        productKeywords:
+          $ref: '#/components/schemas/RegisterProductKeywords'
+    RegisterProductKeywords:
+      title: Keywords del Producto
+      type: object
+      example:
+        keywords:
+          - keywordProduct: "Tarjeta Credito"
+            keywordLot: 3
+          - keywordProduct: "Plan Familiar"
+            keywordLot: 1
+      properties:
+        keywords:
+          maxItems: 100
+          minItems: 0
+          type: array
+          items:
+            $ref: '#/components/schemas/RegisterProductKeywordItem'
+    RegisterProductKeywordItem:
+      title: Trade keyword
       type: object
       properties:
-        id:
-          type: integer
-          description: ID del Producto.
-          format: int64
-          examples: [1]
-        name:
+        keywordProduct:
+          maxLength: 250
+          minLength: 1
           type: string
-          description: Nombre del Producto.
-          maxLength: 50
-          pattern: '^[A-Za-z]+$'
-          examples: ["Inka Kola"]
-        price:
-          type: number
-          description: Precio del Producto.
-          format: double
-          examples: [2.50]
-        stock:
+          description: Nombre del keyword Producto.
+          examples: [Tarjeta Credito]
+        keywordLot:
           type: integer
-          description: Stock del Producto.
-          format: int64
-          examples: [6]
+          minimum: 1
+          maximum: 250
+          description: Valor del keyword Producto.
+          examples: [3]
     ApiException:
       title: ApiException
       type: object
