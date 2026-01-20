@@ -4,9 +4,9 @@ import com.reto.interbank.models.entities.Product;
 import com.reto.reto.interbank.dto.ProductRequest;
 import com.reto.reto.interbank.dto.ProductResponse;
 import lombok.AllArgsConstructor;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 
-@Repository
+@Component
 @AllArgsConstructor
 public class ProductBuilder {
 

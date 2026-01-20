@@ -5,9 +5,9 @@ import com.reto.interbank.utils.Validator;
 import com.reto.reto.interbank.dto.OrderRequest;
 import com.reto.reto.interbank.dto.OrderResponse;
 import lombok.AllArgsConstructor;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 
-@Repository
+@Component
 @AllArgsConstructor
 public class OrderBuilder {
 

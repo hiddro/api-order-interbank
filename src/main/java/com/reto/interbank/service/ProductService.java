@@ -17,4 +17,6 @@ public interface ProductService extends CrudService<Product, Long>{
     Mono<ProductResponse> updateProduct(String name, String operation, ProductRequest productRequest);
 
     Mono<Void> deleteProduct(String name);
+
+    Mono<ProductResponse> addedPro(Long id, ProductRequest productRequest);
 }
